@@ -1,0 +1,12 @@
+# Never commit secrets
+.env
+__pycache__/
+*.pyc
+.DS_Store".env" 
+"venv/" 
+"__pycache__/" 
+"node_modules/" 
+"node_modules/" 
+"venv/" 
+"__pycache__/" 
+".env" 

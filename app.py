@@ -1,45 +1,70 @@
 import streamlit as st
+from auth import login_page, logout
+from database import load_expenses, add_expense, delete_expense
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date
 
-st.set_page_config(page_title="Expense Tracker", page_icon="💰")
-st.title("💰 Expense Tracker")
+st.set_page_config(page_title="Expense Tracker", page_icon="💰", layout="centered")
 
-if "expenses" not in st.session_state:
-    st.session_state.expenses = []
+# --- Auth gate ---
+if "user" not in st.session_state:
+    st.session_state.user = None
 
-with st.form("add_form"):
-    col1, col2, col3 = st.columns(3)
-    with col1: item = st.text_input("Item")
-    with col2: amt = st.number_input("Amount (₹)", min_value=0.0)
-    with col3: cat = st.selectbox("Category",
-        ["Food","Travel","Bills","Shopping","Other"])
-    d = st.date_input("Date", value=date.today())
-    submitted = st.form_submit_button("Add Expense")
-    if submitted and item:
-        st.session_state.expenses.append(
-            {"Item":item,"Amount":amt,"Category":cat,"Date":str(d)})
-        st.success(f"Added: {item}")
+if st.session_state.user is None:
+    login_page()
+    st.stop()
 
-if st.session_state.expenses:
-    df = pd.DataFrame(st.session_state.expenses)
+user    = st.session_state.user
+uid     = user.id
+session = st.session_state.get("session")
+
+# --- Header ---
+col1, col2 = st.columns([4,1])
+col1.title("💰 My Expense Tracker")
+if col2.button("Logout"):
+    logout()
+    st.rerun()
+
+# --- Add expense form ---
+with st.form("add_form", clear_on_submit=True):
+    c1, c2, c3 = st.columns(3)
+    item = c1.text_input("Item")
+    amt  = c2.number_input("Amount (₹)", min_value=0.0, step=10.0)
+    cat  = c3.selectbox("Category",
+           ["Food","Travel","Bills","Shopping","Entertainment","Other"])
+    exp_date = st.date_input("Date", value=date.today())
+    if st.form_submit_button("Add Expense") and item:
+        add_expense(uid, item, amt, cat, exp_date, session=session)
+        st.success(f"Saved: {item}")
+
+# --- Load and show data ---
+df = load_expenses(uid, session=session)
+
+if not df.empty:
+    c1,c2,c3 = st.columns(3)
+    c1.metric("Total Spent",   f"₹{df['amount'].sum():.2f}")
+    c2.metric("Total Entries", len(df))
+    c3.metric("Top Category",
+        df.groupby("category")["amount"].sum().idxmax())
+
     st.subheader("All Expenses")
-    st.dataframe(df, use_container_width=True)
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Spent", f"₹{df['Amount'].sum():.2f}")
-    col2.metric("Entries", len(df))
-    col3.metric("Top Category",
-        df.groupby('Category')['Amount'].sum().idxmax())
+    for _, row in df.iterrows():
+        a,b,c,d,e = st.columns([3,2,2,2,1])
+        a.write(row["item"]); b.write(row["category"])
+        c.write(f"₹{row['amount']:.0f}"); d.write(row["date"])
+        if e.button("🗑", key=str(row["id"])):
+            delete_expense(row["id"], session=session)
+            st.rerun()
 
     st.subheader("Spending by Category")
-    chart_data = df.groupby("Category")["Amount"].sum()
-    fig, ax = plt.subplots()
-    chart_data.plot(kind="bar", ax=ax, color="#378ADD")
-    ax.set_ylabel("Amount (₹)")
-    st.pyplot(fig)
+    chart = df.groupby("category")["amount"].sum()
+    fig, ax = plt.subplots(figsize=(7,3))
+    chart.plot(kind="bar", ax=ax, color="#378ADD", edgecolor="none")
+    ax.set_ylabel("Amount (₹)"); plt.xticks(rotation=30, ha="right")
+    plt.tight_layout(); st.pyplot(fig)
 
-    csv = df.to_csv(index=False)
-    st.download_button("Download CSV", csv,
-        "expenses.csv", "text/csv")
+    st.download_button("Download CSV",
+        df.to_csv(index=False), "expenses.csv", "text/csv")
+else:
+    st.info("No expenses yet. Add your first one above!")
