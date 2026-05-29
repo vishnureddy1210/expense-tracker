@@ -1,19 +1,36 @@
-# 💰 Expense Tracker
+# 💸 SpendSense v2
 
-A personal expense tracking web app built with **Streamlit** and **Supabase**.
+A personal expense tracker for Indian college students — built with **Streamlit**, **Supabase**, and **Claude AI**.
 
-🔗 **Live Demo:** [Add your Hugging Face link here]  
+🔗 **Live Demo:** [Add your Hugging Face link here]
 📦 **Repo:** [github.com/vishnureddy1210/expense-tracker](https://github.com/vishnureddy1210/expense-tracker)
+
+---
+
+## ✨ What's New in v2
+
+| Feature | v1 | v2 |
+|---|---|---|
+| Layout | Single page scroll | **Tabbed** (Dashboard / Add / Analytics / AI) |
+| Charts | Bar chart only | **Donut chart** + Month-over-Month bar |
+| AI | ❌ | **Claude AI insights** — patterns, alerts, tips |
+| Metrics | Static totals | **MoM delta %** on total spend card |
+| Performance | Fetches on every rerender | **`@st.cache_data`** with 30s TTL |
+| Code | All in `app.py` | **Modular** — `utils`, `analytics`, `insights` |
+| Expense list | Shows all | Shows **latest 20** with count note |
 
 ---
 
 ## ✨ Features
 
-- 🔐 Secure sign up & login via Supabase Auth
+- 🔐 Secure sign up, login & password reset via Supabase Auth
 - ➕ Add expenses with item, amount, category & date
-- 📊 Dashboard metrics — total spent, entries, top category
+- 📊 Dashboard — total spent, this-month total, MoM delta, top category
+- 🍩 Donut chart with % breakdown by category
+- 📅 Month-over-month bar chart (last 6 months)
+- 🏆 Top 5 biggest expenses table
+- 🤖 AI Insights — Claude analyzes spending patterns, spots waste, gives tips
 - 🗑️ Delete individual expenses
-- 📈 Spending breakdown bar chart by category
 - 📥 Export all expenses as CSV
 
 ---
@@ -25,7 +42,8 @@ A personal expense tracking web app built with **Streamlit** and **Supabase**.
 | Frontend | Streamlit |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth |
-| Language | Python 3 |
+| AI | Llama 3 70B via Groq (free tier) |
+| Language | Python 3.10+ |
 | Charts | Matplotlib |
 
 ---
@@ -34,11 +52,14 @@ A personal expense tracking web app built with **Streamlit** and **Supabase**.
 
 ```
 expense-tracker/
-├── app.py            # Main Streamlit UI
-├── auth.py           # Login / signup / logout
-├── database.py       # DB helpers (add, load, delete)
+├── app.py            # Main Streamlit app (tabbed layout)
+├── auth.py           # Login / signup / logout / password reset
+├── database.py       # DB helpers with @st.cache_data
+├── utils.py          # Shared constants, styles, helpers
+├── analytics.py      # Charts: donut, MoM bar, top-5 table
+├── insights.py       # Claude AI spending analysis
 ├── requirements.txt  # Python dependencies
-├── .env              # Local secrets (never commit)
+├── .env              # Local secrets (never commit!)
 └── README.md
 ```
 
@@ -46,27 +67,20 @@ expense-tracker/
 
 ## 🚀 Run Locally
 
-### 1. Clone the repo
+### 1. Clone & install
+
 ```bash
 git clone https://github.com/vishnureddy1210/expense-tracker.git
 cd expense-tracker
-```
-
-### 2. Create virtual environment
-```bash
 python -m venv venv
-venv\Scripts\activate      # Windows
-source venv/bin/activate   # macOS/Linux
-```
-
-### 3. Install dependencies
-```bash
+source venv/bin/activate      # macOS/Linux
+# venv\Scripts\activate       # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Set up Supabase
+### 2. Set up Supabase
 
-Create a project at [supabase.com](https://supabase.com), then run this in the **SQL Editor**:
+Create a project at [supabase.com](https://supabase.com), run in **SQL Editor**:
 
 ```sql
 CREATE TABLE expenses (
@@ -82,22 +96,26 @@ CREATE TABLE expenses (
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users manage own expenses"
-ON expenses FOR ALL
-TO authenticated
+ON expenses FOR ALL TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 ```
 
-### 5. Add environment variables
+### 3. Configure environment
 
-Create a `.env` file in the project root:
+Create `.env` in the project root:
 
 ```env
 SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_KEY=your-publishable-key
+SUPABASE_KEY=your-anon-public-key
+GROQ_API_KEY=your-groq-api-key
+SITE_URL=http://localhost:8501
 ```
 
-### 6. Run the app
+> **Get your free Groq API key** at [console.groq.com](https://console.groq.com) → sign up → API Keys. No credit card, no cost.
+
+### 4. Run
+
 ```bash
 streamlit run app.py
 ```
@@ -106,26 +124,16 @@ streamlit run app.py
 
 ## ☁️ Deploy to Hugging Face Spaces
 
-1. Create a new Space at [huggingface.co/spaces](https://huggingface.co/spaces) with **Streamlit** SDK
-2. Push this repo to the Space
-3. Go to **Settings → Variables and Secrets** and add:
+1. Create a Space at [huggingface.co/spaces](https://huggingface.co/spaces) — SDK: **Streamlit**
+2. Push your repo
+3. Add secrets under **Settings → Variables and Secrets**:
 
 | Secret | Value |
 |--------|-------|
 | `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_KEY` | Your Supabase publishable key |
-
----
-
-## 📦 Requirements
-
-```
-streamlit
-supabase
-pandas
-matplotlib
-python-dotenv
-```
+| `SUPABASE_KEY` | Your Supabase anon key |
+| `GROQ_API_KEY` | Your Groq API key (free at console.groq.com) |
+| `SITE_URL` | Your HF Space URL (for password reset redirect) |
 
 ---
 

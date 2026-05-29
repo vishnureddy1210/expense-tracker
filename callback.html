@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>SpendSense — Redirecting...</title>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #1a1a2e;
+        }
+
+        .box {
+            text-align: center;
+            background: white;
+            padding: 2.5rem 3rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #e0e3ee;
+            border-top-color: #5b6af0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        p {
+            color: #7c7f8e;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .err {
+            color: #e53e3e;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="spinner"></div>
+        <p>Setting up your password reset...</p>
+        <p class="err" id="err" style="display:none"></p>
+    </div>
+
+    <script>
+        (function () {
+            try {
+                // Supabase puts tokens after the # in the URL
+                var hash = window.location.hash.substring(1);
+                if (!hash) {
+                    document.getElementById('err').textContent =
+                        'No token found in URL. Please request a new reset link.';
+                    document.getElementById('err').style.display = 'block';
+                    return;
+                }
+
+                var params = {};
+                hash.split('&').forEach(function (pair) {
+                    var idx = pair.indexOf('=');
+                    if (idx > -1) {
+                        params[decodeURIComponent(pair.slice(0, idx))] =
+                            decodeURIComponent(pair.slice(idx + 1));
+                    }
+                });
+
+                if (params['type'] === 'recovery' && params['access_token']) {
+                    // Redirect to Streamlit app with tokens as proper query params
+                    var appUrl = 'http://localhost:8501';
+                    var qs = '?type=recovery'
+                        + '&access_token=' + encodeURIComponent(params['access_token'])
+                        + '&refresh_token=' + encodeURIComponent(params['refresh_token'] || '');
+
+                    window.location.replace(appUrl + qs);
+                } else {
+                    document.getElementById('err').textContent =
+                        'Invalid reset link. Please request a new one.';
+                    document.getElementById('err').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('err').textContent = 'Error: ' + e.message;
+                document.getElementById('err').style.display = 'block';
+            }
+        })();
+    </script>
+</body>
+
+</html>
