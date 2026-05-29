@@ -1,4 +1,4 @@
-# 💸 SpendSense v2
+# 💰Expense tracker
 
 A personal expense tracker for Indian college students — built with **Streamlit**, **Supabase**, and **Claude AI**.
 
