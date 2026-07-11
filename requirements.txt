@@ -1,6 +1,5 @@
-streamlit
-supabase
 pandas
-matplotlib
 python-dotenv
 groq
+fastapi
+uvicorn

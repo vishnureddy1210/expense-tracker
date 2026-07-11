@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+</head>
+<body>
+    <script>
+        // Redirect the hash fragment from callback.html#... to index.html#...
+        // so that the main client application can handle the session set up.
+        var hash = window.location.hash;
+        window.location.replace(window.location.origin + "/" + hash);
+    </script>
+</body>
+</html>

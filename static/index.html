@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpendSense — Track every rupee, stress-free</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- CSS Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="auth-layout">
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Animated Background Orbs -->
+    <div class="auth-bg-orbs" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <!-- ========================================== -->
+    <!--  AUTH SHELL                                -->
+    <!-- ========================================== -->
+    <div id="auth-container" class="auth-container">
+        <!-- Login Card -->
+        <div id="login-card" class="auth-card">
+            <div class="auth-accent-bar"></div>
+            <div class="auth-header">
+                <div class="auth-logo">🔥</div>
+                <h2>Welcome back</h2>
+                <p>Sign in to your SpendSense account</p>
+            </div>
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email address</label>
+                    <input type="email" id="login-email" required placeholder="you@college.edu">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="login-password" required placeholder="Enter your password">
+                        <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                </div>
+                <div class="auth-options-row">
+                    <button type="button" class="btn-link" onclick="showAuthPage('forgot')">Forgot password?</button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
+            </form>
+            <div class="auth-links">
+                <div class="divider">New here?</div>
+                <button type="button" class="btn btn-secondary btn-block" onclick="showAuthPage('signup')">Create a free
+                    account →</button>
+            </div>
+            <div class="auth-security-badge">🔒 Secured with Supabase Auth</div>
+        </div>
+
+        <!-- Signup Card -->
+        <div id="signup-card" class="auth-card hidden">
+            <div class="auth-header">
+                <div class="auth-logo">✨</div>
+                <h2>Create account</h2>
+                <p>Join SpendSense — it's free</p>
+            </div>
+            <form id="signup-form" class="auth-form">
+                <div class="form-group">
+                    <label for="signup-email">Email address</label>
+                    <input type="email" id="signup-email" required placeholder="you@college.edu">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="signup-password" required minlength="6"
+                            placeholder="At least 6 characters">
+                        <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm">Confirm password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="signup-confirm" required minlength="6"
+                            placeholder="Repeat your password">
+                        <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Sign up</button>
+            </form>
+            <div class="auth-links">
+                <div class="divider">Already have an account?</div>
+                <button type="button" class="btn btn-secondary btn-block" onclick="showAuthPage('login')">← Back to
+                    login</button>
+            </div>
+        </div>
+
+        <!-- Forgot Password Card -->
+        <div id="forgot-card" class="auth-card hidden">
+            <div class="auth-header">
+                <div class="auth-logo">🔑</div>
+                <h2>Forgot password?</h2>
+                <p>We'll send a reset link to your email</p>
+            </div>
+            <form id="forgot-form" class="auth-form">
+                <div class="form-group">
+                    <label for="forgot-email">Email address</label>
+                    <input type="email" id="forgot-email" required placeholder="you@college.edu">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Send reset link</button>
+            </form>
+            <div class="auth-links">
+                <div class="divider">Remembered it?</div>
+                <button type="button" class="btn btn-secondary btn-block" onclick="showAuthPage('login')">← Back to
+                    login</button>
+            </div>
+        </div>
+
+        <!-- Reset Password (Set New) Card -->
+        <div id="reset-card" class="auth-card hidden">
+            <div class="auth-header">
+                <div class="auth-logo">🔒</div>
+                <h2>Set new password</h2>
+                <p>Choose a strong new password</p>
+            </div>
+            <form id="reset-form" class="auth-form">
+                <div class="form-group">
+                    <label for="reset-password">New Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="reset-password" required minlength="6"
+                            placeholder="At least 6 characters">
+                        <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Set new password</button>
+            </form>
+            <div class="auth-links">
+                <button type="button" class="btn btn-secondary btn-block" onclick="showAuthPage('login')">← Back to
+                    login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!--  DASHBOARD SHELL                           -->
+    <!-- ========================================== -->
+    <div id="dashboard-container" class="dashboard-container hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-logo">💸</span>
+                <span class="brand-name">SpendSense</span>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-avatar">👤</div>
+                <div class="user-info">
+                    <span id="user-email" class="user-email">loading...</span>
+                    <span class="user-role">Student</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-link active" data-tab="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-link" data-tab="add-expense">
+                    <span class="nav-icon">➕</span>
+                    <span>Add Expense</span>
+                </button>
+                <button class="nav-link" data-tab="analytics">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics</span>
+                </button>
+                <button class="nav-link" data-tab="ai-insights">
+                    <span class="nav-icon">🤖</span>
+                    <span>AI Insights</span>
+                </button>
+                <button class="nav-link" data-tab="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="btn btn-outline-danger btn-block">Log out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div>
+                    <h1 id="page-title">Dashboard</h1>
+                    <p id="today-date" class="date-str">loading date...</p>
+                </div>
+            </header>
+
+            <!-- Tabs Content Panels -->
+            <div class="tabs-content">
+                <!-- TAB 1: Dashboard -->
+                <div id="tab-dashboard" class="tab-panel active">
+                    <!-- Metrics Cards -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="label">Total Spent</div>
+                            <div id="metric-total" class="value accent">₹0</div>
+                            <div id="metric-delta" class="delta"></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="label">This Month</div>
+                            <div id="metric-month" class="value">₹0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="label">Top Category</div>
+                            <div id="metric-category" class="value category-val">None</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Expenses -->
+                    <div class="section-container">
+                        <div class="section-label">Recent Expenses</div>
+                        <div id="recent-expenses-list" class="expense-list-container">
+                            <!-- JS will inject expenses here -->
+                            <div class="empty-state">
+                                <div class="empty-icon">🪙</div>
+                                <h3>No expenses yet</h3>
+                                <p>Use the Add Expense tab to get started</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Add Expense -->
+                <div id="tab-add-expense" class="tab-panel">
+                    <div class="form-container">
+                        <div class="section-label">New Expense</div>
+                        <form id="add-expense-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="exp-item">Item</label>
+                                    <input type="text" id="exp-item" required placeholder="e.g. Lunch">
+                                </div>
+                                <div class="form-group">
+                                    <label for="exp-amount">Amount (₹)</label>
+                                    <input type="number" id="exp-amount" required min="0.01" step="any"
+                                        placeholder="e.g. 150">
+                                </div>
+                                <div class="form-group">
+                                    <label for="exp-category">Category</label>
+                                    <select id="exp-category" required>
+                                        <option value="Food">🍜 Food</option>
+                                        <option value="Travel">✈️ Travel</option>
+                                        <option value="Bills">🧾 Bills</option>
+                                        <option value="Shopping">🛍️ Shopping</option>
+                                        <option value="Entertainment">🎬 Entertainment</option>
+                                        <option value="Other">📌 Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exp-date">Date</label>
+                                    <input type="date" id="exp-date" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block submit-btn">Add Expense ➕</button>
+                        </form>
+                        <p class="form-hint">💡 You can log past expenses too — just change the Date field.</p>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Analytics -->
+                <div id="tab-analytics" class="tab-panel">
+                    <div class="analytics-layout">
+                        <!-- Category Donut Chart -->
+                        <div class="analytics-card">
+                            <div class="section-label">Spending by Category</div>
+                            <div class="chart-container donut-chart-wrapper">
+                                <canvas id="categoryDonutChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Month-over-Month Bar Chart -->
+                        <div class="analytics-card">
+                            <div class="section-label">Month-over-Month</div>
+                            <div class="chart-container bar-chart-wrapper">
+                                <canvas id="momBarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Top 5 Expenses -->
+                        <div class="analytics-card full-width">
+                            <div class="section-label">Top 5 Biggest Expenses</div>
+                            <div class="table-responsive">
+                                <table class="table" id="top-expenses-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Item</th>
+                                            <th>Category</th>
+                                            <th>Amount</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top-expenses-body">
+                                        <!-- JS will populate rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export -->
+                    <button id="download-csv-btn" class="btn btn-download btn-block">📥 Download all expenses as
+                        CSV</button>
+                </div>
+
+                <!-- TAB 4: AI Insights -->
+                <div id="tab-ai-insights" class="tab-panel">
+                    <div class="insights-container">
+                        <div class="section-label">AI-Powered Analysis</div>
+
+                        <div class="insight-action-row">
+                            <button id="generate-insights-btn" class="btn btn-primary">✨ Generate Insights</button>
+                            <span class="insight-powered-by">Powered by Llama 3 via Groq — 100% free 🎉</span>
+                        </div>
+
+                        <!-- Insight Output Box -->
+                        <div id="insight-box-placeholder" class="insight-box-empty">
+                            <div class="insight-icon">🤖</div>
+                            <h3>Click 'Generate Insights' to analyze your spending</h3>
+                            <p>Uses Llama 3 — free, no credit card</p>
+                        </div>
+                        <div id="insight-box-result" class="insight-box hidden">
+                            <!-- Streamed content goes here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: Settings -->
+                <div id="tab-settings" class="tab-panel">
+                    <div class="settings-layout">
+                        <!-- Account & Security Card -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <span class="settings-icon">🔐</span>
+                                <div>
+                                    <h3>Account & Security</h3>
+                                    <p>Manage your password and account settings</p>
+                                </div>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="settings-field">
+                                    <label>Email</label>
+                                    <div class="settings-email-display" id="settings-user-email">loading...</div>
+                                </div>
+                                <hr class="settings-divider">
+                                <form id="settings-password-form">
+                                    <div class="settings-field">
+                                        <label for="settings-old-pass">Current Password</label>
+                                        <div class="password-wrapper">
+                                            <input type="password" id="settings-old-pass" required minlength="6"
+                                                placeholder="Enter your current password">
+                                            <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                                        </div>
+                                    </div>
+                                    <div class="settings-field-row">
+                                        <div class="settings-field">
+                                            <label for="settings-new-pass">New Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" id="settings-new-pass" required minlength="6"
+                                                    placeholder="At least 6 characters">
+                                                <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                                            </div>
+                                        </div>
+                                        <div class="settings-field">
+                                            <label for="settings-confirm-pass">Confirm New Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" id="settings-confirm-pass" required minlength="6"
+                                                    placeholder="Repeat new password">
+                                                <button type="button" class="pass-toggle" onclick="togglePassVisibility(this)" aria-label="Toggle password visibility">👁️</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Update Password</button>
+                                </form>
+                                <div class="settings-forgot-link">
+                                    <span>Forgot your current password?</span>
+                                    <button type="button" class="btn-link" id="settings-forgot-btn">Send a reset link to
+                                        my email →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Appearance Card -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <span class="settings-icon">🎨</span>
+                                <div>
+                                    <h3>Appearance</h3>
+                                    <p>Customize the look and feel of SpendSense</p>
+                                </div>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="theme-toggle-row">
+                                    <div class="theme-toggle-info">
+                                        <span class="theme-label">Theme</span>
+                                        <span class="theme-desc" id="theme-desc-text">Light mode is active</span>
+                                    </div>
+                                    <label class="theme-switch">
+                                        <input type="checkbox" id="theme-toggle-input">
+                                        <span class="theme-slider">
+                                            <span class="theme-slider-icon sun">☀️</span>
+                                            <span class="theme-slider-icon moon">🌙</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Main JavaScript Code -->
+    <script src="app.js"></script>
+</body>
+
+</html>

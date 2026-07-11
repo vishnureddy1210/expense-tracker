@@ -109,13 +109,20 @@ Create `.env` in the project root:
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_KEY=your-anon-public-key
 GROQ_API_KEY=your-groq-api-key
-SITE_URL=http://localhost:8501
+SITE_URL=http://localhost:8502/callback.html
 ```
 
 > **Get your free Groq API key** at [console.groq.com](https://console.groq.com) → sign up → API Keys. No credit card, no cost.
 
 ### 4. Run
 
+To run the new modern web UI (served by a FastAPI backend on port 8502):
+```bash
+python server.py
+```
+Open [http://localhost:8502](http://localhost:8502) in your browser.
+
+*(Optional)* To run the legacy Streamlit UI on port 8501:
 ```bash
 streamlit run app.py
 ```
