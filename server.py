@@ -1,6 +1,7 @@
 # server.py — FastAPI Backend for ExpenseTracker🔥💰
 
 import os
+import mimetypes
 from datetime import date
 from typing import List
 import pandas as pd
@@ -13,6 +14,13 @@ from dotenv import load_dotenv
 
 # Load env variables from .env
 load_dotenv()
+
+# Fix: Debian slim Docker images often lack /etc/mime.types,
+# which causes Python's mimetypes module to misdetect .js/.css files
+# and StaticFiles falls back to "text/plain" — browsers then refuse
+# to execute scripts served with the wrong MIME type. Force correct types.
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
 
 app = FastAPI(title="ExpenseTracker🔥💰 Backend", description="APIs for ExpenseTracker🔥💰 expense tracker")
 
@@ -44,7 +52,6 @@ def build_prompt(expenses_list: List[Expense]) -> str:
         
     today = date.today()
     
-    # Convert Pydantic models to list of dicts
     data = []
     for e in expenses_list:
         data.append({
@@ -59,23 +66,19 @@ def build_prompt(expenses_list: List[Expense]) -> str:
     df = pd.DataFrame(data)
     df["date"] = pd.to_datetime(df["date"])
 
-    # Monthly totals (last 3 months)
     df["month"] = df["date"].dt.to_period("M")
     monthly = df.groupby("month")["amount"].sum().tail(3)
     monthly_str = "\n".join(f"  - {m}: {fmt_inr(v)}" for m, v in monthly.items())
 
-    # Category totals
     cat_totals = df.groupby("category")["amount"].sum().sort_values(ascending=False)
     cat_str = "\n".join(f"  - {cat}: {fmt_inr(val)}" for cat, val in cat_totals.items())
 
-    # Top 5 biggest expenses
     top5 = df.nlargest(5, "amount")[["item", "amount", "category", "date"]]
     top5_str = "\n".join(
         f"  - {row['item']} ({row['category']}) on {row['date'].date()}: {fmt_inr(row['amount'])}"
         for _, row in top5.iterrows()
     )
 
-    # Day-of-week totals
     df["dow"] = df["date"].dt.day_name()
     dow_totals = (
         df.groupby("dow")["amount"]
@@ -156,7 +159,6 @@ async def get_insights(expenses: List[Expense]):
         client = Groq(api_key=GROQ_API_KEY)
         
         async def stream_generator():
-            # Groq Python SDK supports streaming completions
             stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
@@ -178,11 +180,9 @@ async def get_insights(expenses: List[Expense]):
         )
 
 # Mount static files. Must be mounted AFTER other API endpoints so it doesn't intercept them.
-# Ensure the "static" directory exists before mounting.
 os.makedirs("static", exist_ok=True)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    # Start the server on port 8502
     uvicorn.run("server:app", host="0.0.0.0", port=8502, reload=True)
