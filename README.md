@@ -139,23 +139,6 @@ Open [http://localhost:8502](http://localhost:8502) in your browser.
 
 ---
 
-## ☁️ Deploy to Hugging Face Spaces or Render (Docker SDK)
-
-To host this FastAPI app on Hugging Face Spaces or Render, create a service with the **Docker** SDK and include this port-flexible `Dockerfile` in the root:
-
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /code
-COPY ./requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-COPY . .
-CMD uvicorn server:app --host 0.0.0.0 --port ${PORT:-7860}
-```
-
-Remember to add your `.env` variables (`SUPABASE_URL`, `SUPABASE_KEY`, `GROQ_API_KEY`) as environment variables/secrets in the settings.
-
----
-
 ## 🔬 Testing & Verification
 
 To verify that the application and integrations run correctly, perform the following validation steps:
