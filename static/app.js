@@ -10,35 +10,35 @@ let isRecoveringPassword = false;
 
 // Constants — Warm, earth-tone palette for Claude-like aesthetic
 const CATEGORY_STYLE = {
-    "Food":          { emoji: "🍜", bg: "#fef3e2", fg: "#92550a", chart: "#e8a14e" },
-    "Travel":        { emoji: "✈️", bg: "#eef6f9", fg: "#1a6f8a", chart: "#5bb5cc" },
-    "Bills":         { emoji: "🧾", bg: "#eef7f0", fg: "#2d7a4a", chart: "#5cb87a" },
-    "Shopping":      { emoji: "🛍️", bg: "#f5eef8", fg: "#7c3aad", chart: "#a878c8" },
+    "Food": { emoji: "🍜", bg: "#fef3e2", fg: "#92550a", chart: "#e8a14e" },
+    "Travel": { emoji: "✈️", bg: "#eef6f9", fg: "#1a6f8a", chart: "#5bb5cc" },
+    "Bills": { emoji: "🧾", bg: "#eef7f0", fg: "#2d7a4a", chart: "#5cb87a" },
+    "Shopping": { emoji: "🛍️", bg: "#f5eef8", fg: "#7c3aad", chart: "#a878c8" },
     "Entertainment": { emoji: "🎬", bg: "#fceeed", fg: "#b33a3a", chart: "#d4726e" },
-    "Other":         { emoji: "📌", bg: "#f0eeec", fg: "#5a5550", chart: "#9a9590" },
+    "Other": { emoji: "📌", bg: "#f0eeec", fg: "#5a5550", chart: "#9a9590" },
 };
 
 // On Page Load
 document.addEventListener("DOMContentLoaded", async () => {
     setupEventListeners();
     setTodayDateInput();
-    
+
     // Fetch Supabase configuration from server API
     try {
         const res = await fetch("/api/config");
         const config = await res.json();
-        
+
         if (!config.supabaseUrl || !config.supabaseKey) {
             showToast("Supabase config is missing. Check server environment.", "danger");
             return;
         }
-        
+
         // Initialize Supabase
         supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseKey);
-        
+
         // Check for password recovery/reset hash
         handlePasswordResetLanding();
-        
+
         // Monitor Auth State Changes
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (event === "PASSWORD_RECOVERY") {
@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showAuthPage("login");
             }
         });
-        
+
         // Check current session
         const { data: { session }, error } = await supabaseClient.auth.getSession();
         if (session) {
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showAuthPage("login");
             }
         }
-        
+
     } catch (err) {
         console.error("Initialization error:", err);
         showToast("Error connecting to backend server", "danger");
@@ -90,7 +90,7 @@ function setupEventListeners() {
     document.getElementById("signup-form").addEventListener("submit", handleSignup);
     document.getElementById("forgot-form").addEventListener("submit", handleForgotPassword);
     document.getElementById("reset-form").addEventListener("submit", handleResetPassword);
-    
+
     // Dashboard Forms / Actions
     document.getElementById("add-expense-form").addEventListener("submit", handleAddExpense);
     document.getElementById("logout-btn").addEventListener("click", handleLogout);
@@ -99,7 +99,7 @@ function setupEventListeners() {
     document.getElementById("settings-password-form").addEventListener("submit", handleSettingsPasswordChange);
     document.getElementById("settings-forgot-btn").addEventListener("click", handleSettingsForgotPassword);
     document.getElementById("theme-toggle-input").addEventListener("change", handleThemeToggle);
-    
+
     // Sidebar Navigation Toggling
     const navLinks = document.querySelectorAll(".nav-link");
     navLinks.forEach(btn => {
@@ -115,6 +115,9 @@ function setupEventListeners() {
     // CSV Download
     document.getElementById("download-csv-btn").addEventListener("click", downloadExpensesCSV);
 
+    // PDF Download
+    document.getElementById("download-pdf-btn").addEventListener("click", downloadExpensesPDF);
+
     // Quote Shuffle Button
     const shuffleBtn = document.getElementById("shuffle-quote-btn");
     if (shuffleBtn) {
@@ -126,7 +129,7 @@ function setupEventListeners() {
 function setTodayDateInput() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("exp-date").value = today;
-    
+
     // Set Sidebar date header
     const options = { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' };
     document.getElementById("today-date").textContent = new Date().toLocaleDateString('en-US', options);
@@ -137,19 +140,19 @@ function showToast(message, type = "success") {
     const container = document.getElementById("toast-container");
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
-    
+
     toast.innerHTML = `
         <span>${message}</span>
         <button class="toast-close">&times;</button>
     `;
-    
+
     // Close button handler
     toast.querySelector(".toast-close").addEventListener("click", () => {
         toast.remove();
     });
-    
+
     container.appendChild(toast);
-    
+
     // Auto-remove after 4 seconds
     setTimeout(() => {
         toast.style.opacity = "0";
@@ -162,7 +165,7 @@ function showAuthPage(pageName) {
     document.body.className = "auth-layout";
     document.getElementById("auth-container").classList.remove("hidden");
     document.getElementById("dashboard-container").classList.add("hidden");
-    
+
     // Hide all cards, then show targeted one
     const cards = ["login-card", "signup-card", "forgot-card", "reset-card"];
     cards.forEach(id => document.getElementById(id).classList.add("hidden"));
@@ -173,7 +176,7 @@ function showDashboard() {
     document.body.className = "";
     document.getElementById("auth-container").classList.add("hidden");
     document.getElementById("dashboard-container").classList.remove("hidden");
-    
+
     if (currentUser) {
         document.getElementById("user-email").textContent = currentUser.email;
         document.getElementById("settings-user-email").textContent = currentUser.email;
@@ -281,13 +284,13 @@ function switchTab(tabId) {
             btn.classList.remove("active");
         }
     });
-    
+
     // Update Page Title
     const titleEl = document.getElementById("page-title");
     if (titleEl && PAGE_TITLES[tabId]) {
         titleEl.textContent = PAGE_TITLES[tabId];
     }
-    
+
     // Update Tab Panels Visibility
     const panels = document.querySelectorAll(".tab-panel");
     panels.forEach(panel => {
@@ -331,7 +334,7 @@ async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
-    
+
     try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -346,12 +349,12 @@ async function handleSignup(e) {
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
     const confirm = document.getElementById("signup-confirm").value;
-    
+
     if (password !== confirm) {
         showToast("Passwords do not match", "danger");
         return;
     }
-    
+
     try {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
         if (error) throw error;
@@ -365,7 +368,7 @@ async function handleSignup(e) {
 async function handleForgotPassword(e) {
     e.preventDefault();
     const email = document.getElementById("forgot-email").value;
-    
+
     try {
         const redirectUrl = window.location.origin + "/callback.html";
         const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -393,7 +396,7 @@ function handlePasswordResetLanding() {
 async function handleResetPassword(e) {
     e.preventDefault();
     const newPassword = document.getElementById("reset-password").value;
-    
+
     try {
         const { data, error } = await supabaseClient.auth.updateUser({ password: newPassword });
         if (error) throw error;
@@ -422,20 +425,20 @@ async function handleLogout() {
 
 async function loadExpenses() {
     if (!currentUser) return;
-    
+
     try {
         const { data, error } = await supabaseClient
             .from("expenses")
             .select("*")
             .eq("user_id", currentUser.id)
             .order("date", { ascending: false });
-            
+
         if (error) throw error;
-        
+
         currentExpenses = data || [];
         updateMetrics(currentExpenses);
         renderExpensesList(currentExpenses);
-        
+
     } catch (err) {
         console.error("Error loading expenses:", err);
         showToast("Failed to fetch expenses from database.", "danger");
@@ -448,7 +451,7 @@ async function handleAddExpense(e) {
     const amount = parseFloat(document.getElementById("exp-amount").value);
     const category = document.getElementById("exp-category").value;
     const date = document.getElementById("exp-date").value;
-    
+
     if (!item) {
         showToast("Please enter an item name.", "warning");
         return;
@@ -457,7 +460,7 @@ async function handleAddExpense(e) {
         showToast("Amount must be greater than ₹0.", "warning");
         return;
     }
-    
+
     try {
         const { data, error } = await supabaseClient
             .from("expenses")
@@ -468,17 +471,17 @@ async function handleAddExpense(e) {
                 category,
                 date
             });
-            
+
         if (error) throw error;
-        
+
         showToast(`Added: ${item} — ${formatINR(amount)}`);
         document.getElementById("add-expense-form").reset();
         setTodayDateInput();
-        
+
         // Refresh and return to dashboard
         await loadExpenses();
         switchTab("dashboard");
-        
+
     } catch (err) {
         showToast(err.message, "danger");
     }
@@ -490,12 +493,12 @@ async function deleteExpense(expenseId) {
             .from("expenses")
             .delete()
             .eq("id", expenseId);
-            
+
         if (error) throw error;
-        
+
         showToast("Expense deleted successfully.");
         await loadExpenses();
-        
+
         // Also refresh charts if we are on the analytics panel
         if (document.getElementById("tab-analytics").classList.contains("active")) {
             renderCharts();
@@ -515,21 +518,21 @@ function updateMetrics(expenses) {
         document.getElementById("metric-delta").innerHTML = "";
         return;
     }
-    
+
     // 1. Total spent
     const total = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
     document.getElementById("metric-total").textContent = formatINR(total);
-    
+
     // 2. This month vs last month
     const today = new Date();
     const thisMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    
+
     const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
-    
+
     let thisMonthTotal = 0;
     let lastMonthTotal = 0;
-    
+
     expenses.forEach(item => {
         const itemMonth = item.date.substring(0, 7); // "YYYY-MM"
         if (itemMonth === thisMonthStr) {
@@ -538,9 +541,9 @@ function updateMetrics(expenses) {
             lastMonthTotal += Number(item.amount);
         }
     });
-    
+
     document.getElementById("metric-month").textContent = formatINR(thisMonthTotal);
-    
+
     // Compute MoM Delta
     const deltaSpan = document.getElementById("metric-delta");
     if (lastMonthTotal > 0) {
@@ -553,13 +556,13 @@ function updateMetrics(expenses) {
         deltaSpan.className = "delta";
         deltaSpan.innerHTML = "";
     }
-    
+
     // 3. Top Category
     const categoryTotals = {};
     expenses.forEach(item => {
         categoryTotals[item.category] = (categoryTotals[item.category] || 0) + Number(item.amount);
     });
-    
+
     let topCat = "None";
     let maxAmt = 0;
     for (const [cat, amt] of Object.entries(categoryTotals)) {
@@ -568,7 +571,7 @@ function updateMetrics(expenses) {
             topCat = cat;
         }
     }
-    
+
     const catStyle = CATEGORY_STYLE[topCat] || { emoji: "📌" };
     document.getElementById("metric-category").innerHTML = `${catStyle.emoji} ${topCat}`;
 }
@@ -577,7 +580,7 @@ function updateMetrics(expenses) {
 function renderExpensesList(expenses) {
     const container = document.getElementById("recent-expenses-list");
     container.innerHTML = "";
-    
+
     if (expenses.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -588,15 +591,15 @@ function renderExpensesList(expenses) {
         `;
         return;
     }
-    
+
     // Show top 20 latest
     const displayList = expenses.slice(0, 20);
-    
+
     displayList.forEach(item => {
         const style = CATEGORY_STYLE[item.category] || { emoji: "📌", bg: "#f1f5f9", fg: "#475569" };
         const card = document.createElement("div");
         card.className = "exp-card";
-        
+
         card.innerHTML = `
             <div class="exp-left">
                 <div class="exp-name">${escapeHTML(item.item)}</div>
@@ -612,10 +615,10 @@ function renderExpensesList(expenses) {
                 <button class="btn-delete" title="Delete expense" onclick="deleteExpense('${item.id}')">🗑</button>
             </div>
         `;
-        
+
         container.appendChild(card);
     });
-    
+
     if (expenses.length > 20) {
         const info = document.createElement("p");
         info.className = "form-hint";
@@ -626,7 +629,7 @@ function renderExpensesList(expenses) {
 
 // HTML Escaping Utility
 function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
+    return str.replace(/[&<>'"]/g,
         tag => ({
             '&': '&amp;',
             '<': '&lt;',
@@ -641,7 +644,7 @@ function escapeHTML(str) {
 
 function renderCharts() {
     const top5Body = document.getElementById("top-expenses-body");
-    
+
     if (currentExpenses.length === 0) {
         if (categoryDonutChart) {
             categoryDonutChart.destroy();
@@ -654,7 +657,7 @@ function renderCharts() {
         top5Body.innerHTML = `<tr><td colspan="5" style="text-align: center; color: hsl(var(--text-light))">No expenses recorded yet.</td></tr>`;
         return;
     }
-    
+
     // 1. Donut Chart Data preparation
     const catMap = {};
     let totalAmt = 0;
@@ -663,10 +666,10 @@ function renderCharts() {
         catMap[cat] = (catMap[cat] || 0) + Number(e.amount);
         totalAmt += Number(e.amount);
     });
-    
+
     // Sort keys descending by total amount
-    const sortedCategories = Object.keys(catMap).sort((a,b) => catMap[b] - catMap[a]);
-    
+    const sortedCategories = Object.keys(catMap).sort((a, b) => catMap[b] - catMap[a]);
+
     const donutLabels = sortedCategories.map(cat => {
         const percentage = ((catMap[cat] / totalAmt) * 100).toFixed(0);
         const style = CATEGORY_STYLE[cat] || { emoji: "📌" };
@@ -677,7 +680,7 @@ function renderCharts() {
 
     // Donut Chart initialization
     if (categoryDonutChart) categoryDonutChart.destroy();
-    
+
     const ctxDonut = document.getElementById("categoryDonutChart").getContext("2d");
     categoryDonutChart = new Chart(ctxDonut, {
         type: 'doughnut',
@@ -715,7 +718,7 @@ function renderCharts() {
                     cornerRadius: 8,
                     padding: 10,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return ` ${context.label.split(' (')[0]}: ${formatINR(context.raw)}`;
                         }
                     }
@@ -735,22 +738,22 @@ function renderCharts() {
     });
 
     const sortedMonths = Object.keys(monthlyMap).sort().slice(-6);
-    
+
     // Format month labels as readable ("Jan", "Feb", etc)
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const barLabels = sortedMonths.map(m => {
         const parts = m.split('-');
         return monthNames[parseInt(parts[1]) - 1] + " '" + parts[0].slice(2);
     });
     const barData = sortedMonths.map(m => monthlyMap[m]);
-    
+
     // Warm accent: last bar is terracotta, others are muted sand
     const barColors = barData.map((_, idx) => {
         return idx === barData.length - 1 ? "#c87f3a" : "#e2d5c3";
     });
 
     if (momBarChart) momBarChart.destroy();
-    
+
     const ctxBar = document.getElementById("momBarChart").getContext("2d");
     momBarChart = new Chart(ctxBar, {
         type: 'bar',
@@ -777,7 +780,7 @@ function renderCharts() {
                     cornerRadius: 8,
                     padding: 10,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return ` Total: ${formatINR(context.raw)}`;
                         }
                     }
@@ -808,11 +811,11 @@ function renderCharts() {
 
     // 3. Top 5 table
     top5Body.innerHTML = "";
-    
+
     const top5 = [...currentExpenses]
-        .sort((a,b) => Number(b.amount) - Number(a.amount))
+        .sort((a, b) => Number(b.amount) - Number(a.amount))
         .slice(0, 5);
-        
+
     top5.forEach((e, idx) => {
         const tr = document.createElement("tr");
         const cat = e.category || "Other";
@@ -835,20 +838,20 @@ function downloadExpensesCSV() {
         showToast("No expenses to download.", "warning");
         return;
     }
-    
+
     // Headers
     let csvContent = "data:text/csv;charset=utf-8,id,item,amount,category,date\n";
-    
+
     currentExpenses.forEach(e => {
         // Escape commas and quotes in item name
         let cleanItem = e.item.replace(/"/g, '""');
         if (cleanItem.includes(",") || cleanItem.includes('"')) {
             cleanItem = `"${cleanItem}"`;
         }
-        
+
         csvContent += `${e.id},${cleanItem},${e.amount},${e.category},${e.date}\n`;
     });
-    
+
     // Trigger download
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -857,8 +860,60 @@ function downloadExpensesCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     showToast("CSV Download triggered successfully.");
+}
+
+// --- PDF EXPORT ---
+
+function formatINRforPDF(amount) {
+    // jsPDF's default font doesn't support the ₹ symbol or emoji —
+    // using either corrupts the rest of the text string, so we use "Rs." here instead.
+    return "Rs. " + Number(amount).toLocaleString('en-IN', {
+        maximumFractionDigits: 0
+    });
+}
+
+function downloadExpensesPDF() {
+    if (currentExpenses.length === 0) {
+        showToast("No expenses to download.", "warning");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Title — no emoji, jsPDF's default font can't render them
+    doc.setFontSize(18);
+    doc.text("ExpenseTracker - Expense Report", 14, 20);
+
+    // Subtitle with generation date + summary
+    const total = currentExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 27);
+    doc.text(`Total: ${formatINRforPDF(total)} | ${currentExpenses.length} expenses`, 14, 33);
+
+    // Table of all expenses, most recent first
+    const sorted = [...currentExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const rows = sorted.map(e => [
+        e.date || "N/A",
+        e.item,
+        e.category || "Other",
+        formatINRforPDF(e.amount)
+    ]);
+
+    doc.autoTable({
+        startY: 40,
+        head: [["Date", "Item", "Category", "Amount"]],
+        body: rows,
+        theme: 'striped',
+        headStyles: { fillColor: [200, 127, 58] },
+        styles: { fontSize: 9 }
+    });
+
+    doc.save("expensetracker_report.pdf");
+    showToast("PDF Download triggered successfully.");
 }
 
 // Markdown Formatter Utility for AI Insights
@@ -868,16 +923,16 @@ function formatMarkdown(text) {
         .replace(/(?:🔍|👁️)?\s*\*\*Pattern Insights\*\*[:\s]*/gi, '<h3>🔍 Pattern Insights</h3>')
         .replace(/(?:⚠️|🚨)?\s*\*\*Wasteful or Unusual Spend Alerts\*\*[:\s]*/gi, '<h3>⚠️ Wasteful or Unusual Spend Alerts</h3>')
         .replace(/(?:💡|🌱)?\s*\*\*Smart Recommendations\*\*[:\s]*/gi, '<h3>💡 Smart Recommendations</h3>');
-        
+
     // Convert bold **text** to strong
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+
     // Convert bullet lists (e.g. * or -)
     html = html.replace(/^\s*[\*\-]\s+(.+)$/gm, '• $1');
-    
+
     // Convert double and single line breaks
     html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
-    
+
     return html;
 }
 
@@ -887,20 +942,20 @@ async function generateAIInsights() {
     const btn = document.getElementById("generate-insights-btn");
     const placeholder = document.getElementById("insight-box-placeholder");
     const resultBox = document.getElementById("insight-box-result");
-    
+
     if (currentExpenses.length < 3) {
         showToast("Add at least 3 expenses for AI pattern insights.", "warning");
         return;
     }
-    
+
     // Disable button, show loading
     btn.disabled = true;
     btn.textContent = "Analyzing spending...";
-    
+
     placeholder.classList.add("hidden");
     resultBox.classList.remove("hidden");
     resultBox.innerHTML = "<div class='insight-icon' style='animation: spin 1s linear infinite'>⌛</div> Analyzing your data...";
-    
+
     try {
         // Post data to /api/insights
         // Send fields matching schema Expense
@@ -912,35 +967,35 @@ async function generateAIInsights() {
             category: e.category || "Other",
             date: e.date
         }));
-        
+
         const response = await fetch("/api/insights", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(expensesPayload)
         });
-        
+
         if (!response.ok) {
             const errData = await response.json();
             throw new Error(errData.detail || "Server error generating insights");
         }
-        
+
         // Reader to stream text response
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let markdownText = "";
         resultBox.innerHTML = ""; // Clear loader
-        
+
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            
+
             const chunk = decoder.decode(value, { stream: true });
             markdownText += chunk;
-            
+
             // Format markdown dynamically using regex helper
             resultBox.innerHTML = formatMarkdown(markdownText);
         }
-        
+
     } catch (err) {
         console.error("AI Insight error:", err);
         showToast(err.message, "danger");
@@ -957,7 +1012,7 @@ const FINANCE_QUOTES = [
     { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
     { text: "Beware of little expenses; a small leak will sink a great ship.", author: "Benjamin Franklin" },
     { text: "A budget is telling your money where to go instead of wondering where it went.", author: "Dave Ramsey" },
-    { text: "It’s not how much money you make, but how much money you keep.", author: "Robert Kiyosaki" },
+    { text: "It's not how much money you make, but how much money you keep.", author: "Robert Kiyosaki" },
     { text: "The quickest way to double your money is to fold it over and put it back in your pocket.", author: "Will Rogers" },
     { text: "Track your spending, not because you want to restrict yourself, but because you want to understand yourself.", author: "Unknown" },
     { text: "He who buys what he does not need steals from himself.", author: "Swedish Proverb" },
@@ -972,23 +1027,23 @@ function displayRandomQuote() {
     const quoteTextEl = document.getElementById("dashboard-quote");
     const quoteAuthorEl = document.getElementById("dashboard-quote-author");
     if (!quoteTextEl || !quoteAuthorEl) return;
-    
+
     // Smooth transition
     quoteTextEl.style.opacity = "0";
     quoteAuthorEl.style.opacity = "0";
-    
+
     setTimeout(() => {
         const currentQuote = quoteTextEl.textContent.replace(/^"|"$/g, '');
         // Filter out current quote to ensure we get a new one
         const availableQuotes = FINANCE_QUOTES.filter(q => q.text !== currentQuote);
         const quotesPool = availableQuotes.length > 0 ? availableQuotes : FINANCE_QUOTES;
-        
+
         const randomIndex = Math.floor(Math.random() * quotesPool.length);
         const quote = quotesPool[randomIndex];
-        
+
         quoteTextEl.textContent = `"${quote.text}"`;
         quoteAuthorEl.textContent = `— ${quote.author}`;
-        
+
         quoteTextEl.style.opacity = "1";
         quoteAuthorEl.style.opacity = "1";
     }, 200);

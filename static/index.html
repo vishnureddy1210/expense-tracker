@@ -16,6 +16,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF (for PDF export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body class="auth-layout">
@@ -342,8 +345,10 @@
                     </div>
 
                     <!-- Export -->
-                    <button id="download-csv-btn" class="btn btn-download btn-block">📥 Download all expenses as
-                        CSV</button>
+                    <div class="export-row">
+                        <button id="download-csv-btn" class="btn btn-download">📥 Download as CSV</button>
+                        <button id="download-pdf-btn" class="btn btn-download">📄 Download as PDF</button>
+                    </div>
                 </div>
 
                 <!-- TAB 4: AI Insights -->
