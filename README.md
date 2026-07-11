@@ -1,50 +1,61 @@
-# 💰Expense tracker
+# 💰 ExpenseTracker🔥💰
 
-A personal expense tracker for Indian college students — built with **Streamlit**, **Supabase**, and **Claude AI**.
+A high-fidelity, responsive personal expense tracker for college students — built with a **FastAPI** backend, a **Vanilla HTML/CSS/JS Single Page Application (SPA)** frontend, **Supabase Auth & Database**, and **Llama 3 (via Groq API)**.
 
-🔗 **Live Demo:** [Add your Hugging Face link here]
+🔗 **Live Demo:** [Add your deployed Hugging Face / Vercel link here]  
 📦 **Repo:** [github.com/vishnureddy1210/expense-tracker](https://github.com/vishnureddy1210/expense-tracker)
 
 ---
 
-## ✨ What's New in v2
+## 🎨 Visual Interface
 
-| Feature | v1 | v2 |
+### 1. Modern Login Portal
+Features smooth HSL floating orbs and glassmorphism styling.
+![Login Page Screenshot](static/screenshots/login_page_1783751017741.png)
+
+### 2. Main Dashboard (with Financial Wisdom Banner)
+Displays quick metrics cards, rotating wisdom advice at the top, and real-time transaction updates.
+![Dashboard Layout Updated Screenshot](static/screenshots/dashboard_layout_updated_1783751288016.png)
+
+---
+
+## ✨ What's New in v2 (FastAPI SPA Migration)
+
+| Feature | v1 (Streamlit Legacy) | v2 (FastAPI + HTML/CSS/JS SPA) |
 |---|---|---|
-| Layout | Single page scroll | **Tabbed** (Dashboard / Add / Analytics / AI) |
-| Charts | Bar chart only | **Donut chart** + Month-over-Month bar |
-| AI | ❌ | **Claude AI insights** — patterns, alerts, tips |
-| Metrics | Static totals | **MoM delta %** on total spend card |
-| Performance | Fetches on every rerender | **`@st.cache_data`** with 30s TTL |
-| Code | All in `app.py` | **Modular** — `utils`, `analytics`, `insights` |
-| Expense list | Shows all | Shows **latest 20** with count note |
+| **Architecture** | Streamlit Rerender Loop | **FastAPI API Server** + **Independent Frontend** |
+| **UX & Layout** | Python-based tab panels | **Smooth client-side SPA** (Dashboard, Add Expense, Analytics, AI, Settings) |
+| **Wisdom Quotes** | ❌ | **Dynamic Financial Wisdom Banner** at the top of the dashboard with manual shuffle |
+| **Charts** | Matplotlib static charts | **Interactive Chart.js** (Donut categories & MoM bar) |
+| **AI Insights** | Static Claude completions | **Streaming Groq AI Insights** block-by-block |
+| **Theming** | Basic Streamlit toggle | **Persistent Dark/Light Mode** via custom CSS variables & localStorage |
 
 ---
 
 ## ✨ Features
 
-- 🔐 Secure sign up, login & password reset via Supabase Auth
-- ➕ Add expenses with item, amount, category & date
-- 📊 Dashboard — total spent, this-month total, MoM delta, top category
-- 🍩 Donut chart with % breakdown by category
-- 📅 Month-over-month bar chart (last 6 months)
-- 🏆 Top 5 biggest expenses table
-- 🤖 AI Insights — Claude analyzes spending patterns, spots waste, gives tips
-- 🗑️ Delete individual expenses
-- 📥 Export all expenses as CSV
+- 🔐 **Secure Auth**: Sign up, login & password reset flow via Supabase Auth.
+- 💡 **Financial Wisdom Banner**: A card at the top of the dashboard displaying rotating saving quotes that can be refreshed with a 🔄 button.
+- 📊 **Main Dashboard**: Real-time totals (Total Spent, This-Month Spent, Top Category) and a detailed scrollable list of recent transactions.
+- 🍩 **Visual Analytics**: Interactive spending breakdowns by category (Donut Chart) and Month-over-Month charts using Chart.js.
+- 📅 **Top Expenses**: Auto-calculated biggest purchases table to pinpoint where high-ticket funds are going.
+- 🤖 **Streaming AI Insights**: Groq analyzes database records and streams personalized budgeting tips and wasteful spend warnings directly.
+- 🗑️ **Management**: Instantly delete individual expenses.
+- 📥 **Data Portability**: Export all logged expense history into a clean CSV format.
+- 🎨 **Appearance Settings**: Custom theme switcher that toggles light and dark modes with transition effects.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| | Tool |
+| Layer | Component / Tool |
 |---|---|
-| Frontend | Streamlit |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth |
-| AI | Llama 3 70B via Groq (free tier) |
-| Language | Python 3.10+ |
-| Charts | Matplotlib |
+| **Frontend** | Vanilla HTML5 / Custom CSS3 (HSL Variables) / ES6 JavaScript |
+| **Client Libraries** | Supabase JS Client SDK & Chart.js (Loaded via CDN) |
+| **Backend API** | FastAPI (Python 3.10+) served via Uvicorn |
+| **Database** | Supabase (PostgreSQL with RLS policy isolation) |
+| **Auth Provider** | Supabase GoTrue Auth |
+| **AI Engine** | Llama 3.3 70B via Groq API (Streaming response) |
 
 ---
 
@@ -52,22 +63,23 @@ A personal expense tracker for Indian college students — built with **Streamli
 
 ```
 expense-tracker/
-├── app.py            # Main Streamlit app (tabbed layout)
-├── auth.py           # Login / signup / logout / password reset
-├── database.py       # DB helpers with @st.cache_data
-├── utils.py          # Shared constants, styles, helpers
-├── analytics.py      # Charts: donut, MoM bar, top-5 table
-├── insights.py       # Claude AI spending analysis
-├── requirements.txt  # Python dependencies
-├── .env              # Local secrets (never commit!)
-└── README.md
+├── server.py            # FastAPI backend (API endpoints & static file hosting)
+├── static/              # SPA Frontend Assets
+│   ├── index.html       # Single Page Application HTML layout
+│   ├── style.css        # Layouts, typography, theme tokens & card designs
+│   ├── app.js           # Client auth, Chart.js integrations & API calls
+│   └── callback.html    # Password reset callback page (hash fragments)
+├── requirements.txt     # Python backend dependencies
+├── package.json         # Node metadata (used for local IDE Intellisense / Supabase client autocomplete)
+├── .env                 # Local environment secrets (do not commit!)
+└── README.md            # Project documentation
 ```
 
 ---
 
 ## 🚀 Run Locally
 
-### 1. Clone & install
+### 1. Clone & Install Dependencies
 
 ```bash
 git clone https://github.com/vishnureddy1210/expense-tracker.git
@@ -78,9 +90,9 @@ source venv/bin/activate      # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 2. Set up Supabase
+### 2. Set Up Supabase Database
 
-Create a project at [supabase.com](https://supabase.com), run in **SQL Editor**:
+Create a project at [supabase.com](https://supabase.com), open the **SQL Editor**, and execute the following schema to create the table and establish Row Level Security (RLS):
 
 ```sql
 CREATE TABLE expenses (
@@ -101,9 +113,9 @@ USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 ```
 
-### 3. Configure environment
+### 3. Configure the Environment
 
-Create `.env` in the project root:
+Create a `.env` file in the project root:
 
 ```env
 SUPABASE_URL=https://your-project-id.supabase.co
@@ -112,38 +124,62 @@ GROQ_API_KEY=your-groq-api-key
 SITE_URL=http://localhost:8502/callback.html
 ```
 
-> **Get your free Groq API key** at [console.groq.com](https://console.groq.com) → sign up → API Keys. No credit card, no cost.
+> **Get your free Groq API key** at [console.groq.com](https://console.groq.com).
 
-### 4. Run
+### 4. Launch the Server
 
-To run the new modern web UI (served by a FastAPI backend on port 8502):
+Run the FastAPI backend which will serve the API endpoints and the frontend:
 ```bash
-python server.py
+venv\Scripts\python.exe server.py   # Windows
+# python server.py                  # macOS/Linux
 ```
+
 Open [http://localhost:8502](http://localhost:8502) in your browser.
-
-*(Optional)* To run the legacy Streamlit UI on port 8501:
-```bash
-streamlit run app.py
-```
 
 ---
 
-## ☁️ Deploy to Hugging Face Spaces
+## ☁️ Deploy to Hugging Face Spaces or Render (Docker SDK)
 
-1. Create a Space at [huggingface.co/spaces](https://huggingface.co/spaces) — SDK: **Streamlit**
-2. Push your repo
-3. Add secrets under **Settings → Variables and Secrets**:
+To host this FastAPI app on Hugging Face Spaces or Render, create a service with the **Docker** SDK and include this port-flexible `Dockerfile` in the root:
 
-| Secret | Value |
-|--------|-------|
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_KEY` | Your Supabase anon key |
-| `GROQ_API_KEY` | Your Groq API key (free at console.groq.com) |
-| `SITE_URL` | Your HF Space URL (for password reset redirect) |
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /code
+COPY ./requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY . .
+CMD uvicorn server:app --host 0.0.0.0 --port ${PORT:-7860}
+```
+
+Remember to add your `.env` variables (`SUPABASE_URL`, `SUPABASE_KEY`, `GROQ_API_KEY`) as environment variables/secrets in the settings.
+
+---
+
+## 🔬 Testing & Verification
+
+To verify that the application and integrations run correctly, perform the following validation steps:
+
+### 1. Backend Endpoint Health Checks
+* **Config Check**: Send a GET request to `/api/config` to verify Supabase environment variables are loaded and exposed.
+* **AI Analysis Stream**: Send a POST request to `/api/insights` with mock expense payload data to verify streaming chunks return successfully from the Groq completions engine.
+
+### 2. Manual E2E Verification
+* **Authentication**: Confirm signup creates an entry in Supabase, and login sets the active JWT session. Try the **Password Reset** flow (using the `/callback.html` redirection) to confirm site URLs redirect correctly.
+* **CRUD Flow**: Add a test expense, confirm it displays immediately in the recent list with currency formatting, update analytics displays, and delete it to verify reactivity.
+* **CSV Export**: Click the CSV export button and verify file downloads with escaping for special characters in expense names.
+
+---
+
+## 🧠 Interview Prep: Resilience & Edge Cases
+
+When asked about how **ExpenseTracker** handles anomalies, reference these architectural decisions:
+
+* **Groq API / Llama 3 Outages**: If the AI model is down or rate-limited, the `/api/insights` endpoint returns a clear `500` error block with specific exception logs. The frontend JavaScript handles this response, enables the "Generate Insights" button, and alerts the user via a red toast banner instead of freezing the UI.
+* **Supabase Session Expirations & Network Dropping**: The app implements JWT expiration checks. If Supabase Auth tokens expire or connectivity is disrupted, operations catch standard SDK exceptions and show alerts.
+* **CSRF and Access Controls**: Database reads/writes do not rely on local variables. PostgreSQL Row Level Security (RLS) guarantees that users can only read, update, or delete data belonging directly to their Supabase user ID, even if custom request headers are spoofed.
 
 ---
 
 ## 📄 License
 
-MIT — free to use and modify.
+MIT — Free to use, adapt, and build upon.

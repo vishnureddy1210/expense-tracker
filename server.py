@@ -1,4 +1,4 @@
-# server.py — FastAPI Backend for SpendSense
+# server.py — FastAPI Backend for ExpenseTracker🔥💰
 
 import os
 from datetime import date
@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # Load env variables from .env
 load_dotenv()
 
-app = FastAPI(title="SpendSense Backend", description="APIs for SpendSense expense tracker")
+app = FastAPI(title="ExpenseTracker🔥💰 Backend", description="APIs for ExpenseTracker🔥💰 expense tracker")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")

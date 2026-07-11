@@ -1,4 +1,4 @@
-// app.js — SpendSense Frontend Controller
+// app.js — ExpenseTracker🔥💰 Frontend Controller
 
 // Application State
 let supabaseClient = null;
@@ -114,6 +114,12 @@ function setupEventListeners() {
 
     // CSV Download
     document.getElementById("download-csv-btn").addEventListener("click", downloadExpensesCSV);
+
+    // Quote Shuffle Button
+    const shuffleBtn = document.getElementById("shuffle-quote-btn");
+    if (shuffleBtn) {
+        shuffleBtn.addEventListener("click", displayRandomQuote);
+    }
 }
 
 // Set default value for new expense date input to today
@@ -172,6 +178,7 @@ function showDashboard() {
         document.getElementById("user-email").textContent = currentUser.email;
         document.getElementById("settings-user-email").textContent = currentUser.email;
         loadExpenses();
+        displayRandomQuote();
     }
     initTheme();
 }
@@ -235,7 +242,7 @@ async function handleSettingsForgotPassword() {
 // --- THEME TOGGLE ---
 
 function initTheme() {
-    const saved = localStorage.getItem("spendsense-theme") || "light";
+    const saved = localStorage.getItem("expensetracker-theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
     const toggle = document.getElementById("theme-toggle-input");
     toggle.checked = saved === "dark";
@@ -245,7 +252,7 @@ function initTheme() {
 function handleThemeToggle(e) {
     const theme = e.target.checked ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("spendsense-theme", theme);
+    localStorage.setItem("expensetracker-theme", theme);
     updateThemeDescription(theme);
 }
 
@@ -846,7 +853,7 @@ function downloadExpensesCSV() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "spendsense_expenses.csv");
+    link.setAttribute("download", "expensetracker_expenses.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -943,4 +950,46 @@ async function generateAIInsights() {
         btn.disabled = false;
         btn.textContent = "✨ Generate Insights";
     }
+}
+
+// --- FINANCIAL QUOTES SYSTEM ---
+const FINANCE_QUOTES = [
+    { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
+    { text: "Beware of little expenses; a small leak will sink a great ship.", author: "Benjamin Franklin" },
+    { text: "A budget is telling your money where to go instead of wondering where it went.", author: "Dave Ramsey" },
+    { text: "It’s not how much money you make, but how much money you keep.", author: "Robert Kiyosaki" },
+    { text: "The quickest way to double your money is to fold it over and put it back in your pocket.", author: "Will Rogers" },
+    { text: "Track your spending, not because you want to restrict yourself, but because you want to understand yourself.", author: "Unknown" },
+    { text: "He who buys what he does not need steals from himself.", author: "Swedish Proverb" },
+    { text: "Every rupee saved is a rupee earned.", author: "Indian Proverb" },
+    { text: "Too many people spend money they haven't earned, to buy things they don't want, to impress people they don't like.", author: "Will Rogers" },
+    { text: "Do not buy what you do not need, because it is cheap; it will be dear to you.", author: "Thomas Jefferson" },
+    { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+    { text: "The safe way to double your money is to fold it over once and put it in your pocket.", author: "Kin Hubbard" }
+];
+
+function displayRandomQuote() {
+    const quoteTextEl = document.getElementById("dashboard-quote");
+    const quoteAuthorEl = document.getElementById("dashboard-quote-author");
+    if (!quoteTextEl || !quoteAuthorEl) return;
+    
+    // Smooth transition
+    quoteTextEl.style.opacity = "0";
+    quoteAuthorEl.style.opacity = "0";
+    
+    setTimeout(() => {
+        const currentQuote = quoteTextEl.textContent.replace(/^"|"$/g, '');
+        // Filter out current quote to ensure we get a new one
+        const availableQuotes = FINANCE_QUOTES.filter(q => q.text !== currentQuote);
+        const quotesPool = availableQuotes.length > 0 ? availableQuotes : FINANCE_QUOTES;
+        
+        const randomIndex = Math.floor(Math.random() * quotesPool.length);
+        const quote = quotesPool[randomIndex];
+        
+        quoteTextEl.textContent = `"${quote.text}"`;
+        quoteAuthorEl.textContent = `— ${quote.author}`;
+        
+        quoteTextEl.style.opacity = "1";
+        quoteAuthorEl.style.opacity = "1";
+    }, 200);
 }

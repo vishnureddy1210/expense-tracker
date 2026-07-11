@@ -1,4 +1,4 @@
-/* style.css — SpendSense · Claude-inspired Design System */
+/* style.css — ExpenseTracker🔥💰 · Claude-inspired Design System */
 
 :root {
     /* Fonts */
@@ -748,6 +748,90 @@ body.auth-layout {
 
 .section-container {
     margin-bottom: 2rem;
+}
+
+/* Dashboard Grid & Quote Card */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1.2fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.quote-card {
+    background-color: hsl(var(--bg-card));
+    border: 1px solid hsl(var(--border-color));
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    position: relative;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quote-card:hover {
+    border-color: hsl(var(--text-light));
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.quote-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quote-icon {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+.btn-quote-shuffle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    opacity: 0.4;
+    transition: var(--transition);
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-quote-shuffle:hover {
+    opacity: 1;
+    background-color: hsl(var(--bg-app));
+    transform: rotate(30deg);
+}
+
+.quote-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: hsl(var(--text-main));
+    font-style: italic;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.quote-author {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: hsl(var(--text-muted));
+    font-style: normal;
+    text-align: right;
+    display: block;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+@media (max-width: 868px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ═══════════════════════════════════════════════ */
