@@ -2,7 +2,7 @@
 
 A high-fidelity, responsive personal expense tracker for college students — built with a **FastAPI** backend, a **Vanilla HTML/CSS/JS Single Page Application (SPA)** frontend, **Supabase Auth & Database**, and **Llama 3 (via Groq API)**.
 
-🔗 **Live Demo:** [https://expense-tracker-et8a.onrender.com]  
+🔗 **Live Demo:** https://expense-tracker-et8a.onrender.com
 📦 **Repo:** [github.com/vishnureddy1210/expense-tracker](https://github.com/vishnureddy1210/expense-tracker)
    
 
