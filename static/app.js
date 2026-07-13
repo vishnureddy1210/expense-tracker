@@ -348,12 +348,6 @@ async function handleSignup(e) {
     e.preventDefault();
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
-    const confirm = document.getElementById("signup-confirm").value;
-
-    if (password !== confirm) {
-        showToast("Passwords do not match", "danger");
-        return;
-    }
 
     try {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -362,6 +356,21 @@ async function handleSignup(e) {
         showAuthPage("login");
     } catch (err) {
         showToast(err.message, "danger");
+    }
+}
+
+// Social login handler (Google/Apple via Supabase OAuth)
+async function handleSocialLogin(provider) {
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: window.location.origin
+            }
+        });
+        if (error) throw error;
+    } catch (err) {
+        showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in failed: ${err.message}`, "danger");
     }
 }
 
