@@ -11,8 +11,8 @@ A high-fidelity, responsive personal expense tracker for college students — bu
 ## 🎨 Visual Interface
 
 ### 1. Modern Login Portal
-Features smooth HSL floating orbs and glassmorphism styling.
-![Login Page Screenshot](static/screenshots/login_page_1783751017741.png)
+Split-screen layout with a glassmorphism auth card and a full-bleed visual panel.
+![Login Page Screenshot](static/screenshots/login_page_1783958724237.png)
 
 ### 2. Main Dashboard (with Financial Wisdom Banner)
 Displays quick metrics cards, rotating wisdom advice at the top, and real-time transaction updates.
