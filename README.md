@@ -152,8 +152,7 @@ To verify that the application and integrations run correctly, perform the follo
 * **CRUD Flow**: Add a test expense, confirm it displays immediately in the recent list with currency formatting, update analytics displays, and delete it to verify reactivity.
 * **CSV Export**: Click the CSV export button and verify file downloads with escaping for special characters in expense names.
 
----
-
+------------------------------------
 ## 🧠 Interview Prep: Resilience & Edge Cases
 
 When asked about how **ExpenseTracker** handles anomalies, reference these architectural decisions:
