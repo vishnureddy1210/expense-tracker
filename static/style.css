@@ -624,7 +624,7 @@ body.auth-layout {
 
 .auth-right-panel {
     position: relative;
-    background: url('celebration_bg.png') center center / cover no-repeat;
+    background: url('celebration_bg.jpg') center center / cover no-repeat;
     overflow: hidden;
     display: flex;
     flex-direction: column;
