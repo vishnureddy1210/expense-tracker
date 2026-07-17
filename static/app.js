@@ -223,6 +223,21 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Smart auto-categorization based on item description keywords
+    const expItemInput = document.getElementById("exp-item");
+    if (expItemInput) {
+        expItemInput.addEventListener("input", (e) => {
+            const val = e.target.value;
+            const categorySelect = document.getElementById("exp-category");
+            if (categorySelect) {
+                const prediction = predictCategory(val);
+                if (prediction) {
+                    categorySelect.value = prediction;
+                }
+            }
+        });
+    }
 }
 
 // Set default value for new expense date input to today
@@ -1346,4 +1361,26 @@ function displayRandomQuote() {
         quoteTextEl.style.opacity = "1";
         quoteAuthorEl.style.opacity = "1";
     }, 200);
+}
+
+// --- AUTO-CATEGORIZATION UTILITY ---
+const CATEGORY_KEYWORDS = {
+    "Food": ["food", "lunch", "dinner", "breakfast", "starbucks", "coffee", "restaurant", "mcdonalds", "swiggy", "zomato", "cafe", "tea", "chai", "burger", "pizza", "grocery", "groceries", "snack", "snacks", "drinks", "subway", "kfc", "coke", "pepsi", "baskin", "maggi", "dominos", "dunkin", "eats", "bakery", "sweets"],
+    "Travel": ["uber", "ola", "auto", "cab", "metro", "bus", "flight", "ticket", "train", "petrol", "fuel", "diesel", "transport", "travel", "rapido", "ride", "taxi", "toll", "indane", "gasoline", "irctc", "airline", "indigo", "airindia"],
+    "Bills": ["rent", "electricity", "water", "wifi", "internet", "recharge", "mobile", "subscription", "netflix", "spotify", "bill", "gas", "insurance", "broadband", "youtube", "postpaid", "dth", "landline", "jio", "airtel", "vi "],
+    "Shopping": ["amazon", "flipkart", "myntra", "clothes", "shoes", "tshirt", "jeans", "shopping", "gift", "watch", "electronics", "laptop", "phone", "shirt", "pant", "jacket", "hoodie", "nike", "adidas", "zara", "h&m"],
+    "Entertainment": ["movie", "cinema", "theatre", "concert", "game", "gaming", "steam", "playstation", "pubg", "club", "party", "beer", "wine", "pub", "bar", "arcade", "bookmyshow", "disney", "prime video", "hotstar", "zee5", "sony"]
+};
+
+function predictCategory(itemName) {
+    if (!itemName) return null;
+    const text = itemName.toLowerCase().trim();
+    for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+        for (const word of keywords) {
+            if (text.includes(word)) {
+                return category;
+            }
+        }
+    }
+    return null;
 }
