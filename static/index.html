@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <!-- CSS Style -->
     <link rel="stylesheet" href="style.css">
@@ -19,6 +19,8 @@
     <!-- jsPDF (for PDF export) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="auth-layout">
@@ -41,7 +43,6 @@
         <div class="auth-wrapper">
             <!-- Left panel: Original dark glassmorphic forms -->
             <div class="auth-left-panel">
-                <!-- Animated Background Orbs inside left panel -->
                 <div class="auth-panel-orbs" aria-hidden="true">
                     <div class="orb orb-1"></div>
                     <div class="orb orb-2"></div>
@@ -230,6 +231,7 @@
                             <div id="metric-total" class="value accent">₹0</div>
                             <div id="metric-delta" class="delta"></div>
                         </div>
+
                         <div class="metric-card">
                             <div class="label">This Month</div>
                             <div id="metric-month" class="value">₹0</div>
@@ -237,6 +239,17 @@
                         <div class="metric-card">
                             <div class="label">Top Category</div>
                             <div id="metric-category" class="value category-val">None</div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Budgets Section -->
+                    <div class="section-container">
+                        <div class="section-header-row">
+                            <div class="section-label">Monthly Budgets</div>
+                            <button type="button" class="btn-sm-link" onclick="switchTab('settings')">Configure ⚙️</button>
+                        </div>
+                        <div class="budgets-grid" id="dashboard-budgets-grid">
+                            <!-- Budget cards loaded via JS -->
                         </div>
                     </div>
 
@@ -258,7 +271,21 @@
 
                     <!-- Recent Expenses -->
                     <div class="section-container">
-                        <div class="section-label">Recent Expenses</div>
+                        <div class="section-header-row">
+                            <div class="section-label">Transactions</div>
+                            <div class="search-filter-box">
+                                <input type="text" id="tx-search-input" placeholder="🔍 Search item...">
+                                <div class="filter-pills" id="tx-filter-pills">
+                                    <button class="filter-pill active" data-category="All">All</button>
+                                    <button class="filter-pill" data-category="Food">🍜 Food</button>
+                                    <button class="filter-pill" data-category="Travel">✈️ Travel</button>
+                                    <button class="filter-pill" data-category="Bills">🧾 Bills</button>
+                                    <button class="filter-pill" data-category="Shopping">🛍️ Shopping</button>
+                                    <button class="filter-pill" data-category="Entertainment">🎬 Entertainment</button>
+                                    <button class="filter-pill" data-category="Other">📌 Other</button>
+                                </div>
+                            </div>
+                        </div>
                         <div id="recent-expenses-list" class="expense-list-container">
                             <!-- JS will inject expenses here -->
                             <div class="empty-state">
@@ -284,6 +311,13 @@
                                     <label for="exp-amount">Amount (₹)</label>
                                     <input type="number" id="exp-amount" required min="0.01" step="any"
                                         placeholder="e.g. 150">
+                                    <div class="amount-presets">
+                                        <button type="button" class="btn-preset" data-amount="50">+₹50</button>
+                                        <button type="button" class="btn-preset" data-amount="100">+₹100</button>
+                                        <button type="button" class="btn-preset" data-amount="200">+₹200</button>
+                                        <button type="button" class="btn-preset" data-amount="500">+₹500</button>
+                                        <button type="button" class="btn-preset" data-amount="1000">+₹1000</button>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="exp-category">Category</label>
@@ -357,22 +391,48 @@
 
                 <!-- TAB 4: AI Insights -->
                 <div id="tab-ai-insights" class="tab-panel">
-                    <div class="insights-container">
-                        <div class="section-label">AI-Powered Analysis</div>
-
-                        <div class="insight-action-row">
-                            <button id="generate-insights-btn" class="btn btn-primary">✨ Generate Insights</button>
-                            <span class="insight-powered-by">Powered by Llama 3 via Groq — 100% free 🎉</span>
+                    <div class="ai-chat-layout">
+                        <!-- Left panel: quick actions & prompt suggestions -->
+                        <div class="ai-chat-sidebar">
+                            <div class="sidebar-card">
+                                <h3>✨ Spending Analysis</h3>
+                                <p>Get a comprehensive, streamed financial breakdown of your expenses.</p>
+                                <button id="generate-insights-btn" class="btn btn-primary btn-block">📊 Generate Full Report</button>
+                                <span class="insight-powered-by">Powered by Groq & Llama 3 — 100% free 🎉</span>
+                            </div>
+                            <div class="sidebar-card">
+                                <h3>💡 Ask AI Assistant</h3>
+                                <p>Select a quick question to instantly analyze your logs:</p>
+                                <div class="prompt-chips">
+                                    <button type="button" class="prompt-chip" data-prompt="What category did I spend the most on and how much?">🍜 Top Category Info</button>
+                                    <button type="button" class="prompt-chip" data-prompt="Are there any wasteful or unusually high-amount expenses you notice?">⚠️ wasteful alert</button>
+                                    <button type="button" class="prompt-chip" data-prompt="Give me 3 concrete, actionable tips to cut my spending.">💡 savings tips</button>
+                                    <button type="button" class="prompt-chip" data-prompt="Analyze my transactions and tell me if my spending is rising or falling.">📈 trend summary</button>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Insight Output Box -->
-                        <div id="insight-box-placeholder" class="insight-box-empty">
-                            <div class="insight-icon">🤖</div>
-                            <h3>Click 'Generate Insights' to analyze your spending</h3>
-                            <p>Uses Llama 3 — free, no credit card</p>
-                        </div>
-                        <div id="insight-box-result" class="insight-box hidden">
-                            <!-- Streamed content goes here -->
+                        <!-- Right panel: Conversational Interface -->
+                        <div class="ai-chat-main">
+                            <div class="chat-header">
+                                <div class="assistant-avatar">🤖</div>
+                                <div class="assistant-details">
+                                    <h3>Finance Bud</h3>
+                                    <p>AI Spending Buddy · Online</p>
+                                </div>
+                            </div>
+                            <div class="chat-messages-container" id="chat-messages">
+                                <div class="chat-bubble ai-msg">
+                                    Hello! I am your AI finance friend. Ask me anything about your recorded expenses or request a detailed analysis. Let's make every rupee count! 💪
+                                </div>
+                                <!-- Chat history container -->
+                            </div>
+                            <div class="chat-input-area">
+                                <form id="ai-chat-form" class="chat-form">
+                                    <input type="text" id="chat-user-input" required placeholder="Ask about your expenses... (e.g. 'How much did I spend on food?')" autocomplete="off">
+                                    <button type="submit" class="btn btn-primary send-btn">Send ⚡</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -438,19 +498,61 @@
                             </div>
                         </div>
 
+                        <!-- Monthly Budgets Card -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <span class="settings-icon">🎯</span>
+                                <div>
+                                    <h3>Monthly Category Budgets</h3>
+                                    <p>Set a spending limit for each category. Set to 0 to disable warnings.</p>
+                                </div>
+                            </div>
+                            <div class="settings-card-body">
+                                <form id="budget-settings-form" class="budget-form">
+                                    <div class="budget-fields-grid">
+                                        <div class="budget-field">
+                                            <label for="budget-Food">🍜 Food Budget (₹)</label>
+                                            <input type="number" id="budget-Food" min="0" placeholder="e.g. 5000">
+                                        </div>
+                                        <div class="budget-field">
+                                            <label for="budget-Travel">✈️ Travel Budget (₹)</label>
+                                            <input type="number" id="budget-Travel" min="0" placeholder="e.g. 2000">
+                                        </div>
+                                        <div class="budget-field">
+                                            <label for="budget-Bills">🧾 Bills Budget (₹)</label>
+                                            <input type="number" id="budget-Bills" min="0" placeholder="e.g. 3000">
+                                        </div>
+                                        <div class="budget-field">
+                                            <label for="budget-Shopping">🛍️ Shopping Budget (₹)</label>
+                                            <input type="number" id="budget-Shopping" min="0" placeholder="e.g. 4000">
+                                        </div>
+                                        <div class="budget-field">
+                                            <label for="budget-Entertainment">🎬 Entertainment Budget (₹)</label>
+                                            <input type="number" id="budget-Entertainment" min="0" placeholder="e.g. 1500">
+                                        </div>
+                                        <div class="budget-field">
+                                            <label for="budget-Other">📌 Other Budget (₹)</label>
+                                            <input type="number" id="budget-Other" min="0" placeholder="e.g. 2000">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary submit-btn">Save Budgets 🎯</button>
+                                </form>
+                            </div>
+                        </div>
+
                         <!-- Appearance Card -->
                         <div class="settings-card">
                             <div class="settings-card-header">
                                 <span class="settings-icon">🎨</span>
                                 <div>
-                                    <h3>Appearance</h3>
+                                    <h3>Appearance & Theme Accents</h3>
                                     <p>Customize the look and feel of ExpenseTracker🔥💰</p>
                                 </div>
                             </div>
                             <div class="settings-card-body">
                                 <div class="theme-toggle-row">
                                     <div class="theme-toggle-info">
-                                        <span class="theme-label">Theme</span>
+                                        <span class="theme-label">Dark Mode Toggle</span>
                                         <span class="theme-desc" id="theme-desc-text">Light mode is active</span>
                                     </div>
                                     <label class="theme-switch">
@@ -460,6 +562,17 @@
                                             <span class="theme-slider-icon moon">🌙</span>
                                         </span>
                                     </label>
+                                </div>
+                                <hr class="settings-divider">
+                                <div class="accent-select-row">
+                                    <span class="theme-label">Theme Color Accent</span>
+                                    <div class="accent-options">
+                                        <button type="button" class="accent-option active" data-accent="terracotta" style="background-color: #d97706;" title="Terracotta"></button>
+                                        <button type="button" class="accent-option" data-accent="indigo" style="background-color: #6366f1;" title="Indigo"></button>
+                                        <button type="button" class="accent-option" data-accent="emerald" style="background-color: #10b981;" title="Emerald"></button>
+                                        <button type="button" class="accent-option" data-accent="amber" style="background-color: #f59e0b;" title="Amber"></button>
+                                        <button type="button" class="accent-option" data-accent="violet" style="background-color: #8b5cf6;" title="Violet"></button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

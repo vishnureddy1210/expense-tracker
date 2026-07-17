@@ -179,6 +179,113 @@ async def get_insights(expenses: List[Expense]):
             detail=f"Failed to generate insights from Groq: {str(e)}"
         )
 
+# Pydantic models for chat request
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    expenses: List[Expense]
+    message: str
+    history: List[ChatMessage] | None = []
+
+def build_chat_system_prompt(expenses_list: List[Expense]) -> str:
+    """Construct a system prompt for the chat assistant based on expense data."""
+    if not expenses_list:
+        summary_str = "No expenses recorded yet."
+    else:
+        # Build standard summary statistics
+        data = []
+        for e in expenses_list:
+            data.append({
+                "amount": e.amount,
+                "category": e.category,
+                "date": e.date,
+                "item": e.item
+            })
+        df = pd.DataFrame(data)
+        df["date"] = pd.to_datetime(df["date"])
+        
+        total = df["amount"].sum()
+        avg_daily = df.groupby(df["date"].dt.date)["amount"].sum().mean()
+        
+        cat_totals = df.groupby("category")["amount"].sum().sort_values(ascending=False)
+        cat_str = "\n".join(f"  - {cat}: {fmt_inr(val)}" for cat, val in cat_totals.items())
+        
+        top5 = df.nlargest(5, "amount")[["item", "amount", "category", "date"]]
+        top5_str = "\n".join(
+            f"  - {row['item']} ({row['category']}) on {row['date'].date()}: {fmt_inr(row['amount'])}"
+            for _, row in top5.iterrows()
+        )
+        
+        summary_str = f"""=== EXPENSE SUMMARY ===
+Total recorded: {fmt_inr(total)}
+Average daily spend: {fmt_inr(avg_daily)}
+
+Category breakdown (all time):
+{cat_str}
+
+Top 5 largest expenses:
+{top5_str}"""
+
+    return f"""You are a friendly, sharp personal finance assistant for an Indian college student.
+The user's expense data is summarized below:
+
+{summary_str}
+
+=== INSTRUCTIONS ===
+1. You are having an interactive chat with the student. Keep your responses short, conversational, and direct (1-3 paragraphs, under 150 words).
+2. Answer the user's questions specifically using the provided data. Reference actual items, dates, and amounts.
+3. Use ₹ for currency.
+4. Sound like a smart friend (use some emojis, be encouraging), not a dry chatbot.
+5. If the user asks questions unrelated to their finances or budgeting, politely guide them back to their expenses."""
+
+@app.post("/api/chat")
+async def chat_with_assistant(req: ChatRequest):
+    """Interact with Llama 3 via Groq to answer specific questions about expenses."""
+    if not GROQ_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GROQ_API_KEY is not set on the backend. Please add it to your .env file."
+        )
+    
+    system_prompt = build_chat_system_prompt(req.expenses)
+    
+    # Construct messages array
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Append history
+    if req.history:
+        for msg in req.history:
+            messages.append({"role": msg.role, "content": msg.content})
+            
+    # Append latest message
+    messages.append({"role": "user", "content": req.message})
+    
+    try:
+        client = Groq(api_key=GROQ_API_KEY)
+        
+        async def stream_generator():
+            stream = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                max_tokens=500,
+                temperature=0.6,
+                stream=True
+            )
+            for chunk in stream:
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield content
+                    
+        return StreamingResponse(stream_generator(), media_type="text/plain")
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to communicate with Groq: {str(e)}"
+        )
+
 # Mount static files. Must be mounted AFTER other API endpoints so it doesn't intercept them.
 os.makedirs("static", exist_ok=True)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
