@@ -157,27 +157,27 @@ async def get_insights(expenses: List[Expense]):
     
     try:
         client = Groq(api_key=GROQ_API_KEY)
-        
-        async def stream_generator():
-            stream = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=600,
-                temperature=0.6,
-                stream=True
-            )
-            for chunk in stream:
-                content = chunk.choices[0].delta.content
-                if content:
-                    yield content
-                    
-        return StreamingResponse(stream_generator(), media_type="text/plain")
-        
+        stream = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=600,
+            temperature=0.6,
+            stream=True
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate insights from Groq: {str(e)}"
+            detail=f"Failed to connect to Groq: {str(e)}"
         )
+
+    def stream_generator():
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content
+
+    return StreamingResponse(stream_generator(), media_type="text/plain")
+
 
 # Pydantic models for chat request
 class ChatMessage(BaseModel):
@@ -238,7 +238,29 @@ The user's expense data is summarized below:
 2. Answer the user's questions specifically using the provided data. Reference actual items, dates, and amounts.
 3. Use ₹ for currency.
 4. Sound like a smart friend (use some emojis, be encouraging), not a dry chatbot.
-5. If the user asks questions unrelated to their finances or budgeting, politely guide them back to their expenses."""
+5. If the user asks questions unrelated to their finances or budgeting, politely guide them back to their expenses.
+6. If the user asks to see a chart, graph, or visual plot of their spending/expenses (e.g. category breakdown, spending trends, or monthly comparisons), you MUST output a single valid JSON block containing Chart.js config parameters inside a ```json-chart code block at the very end of your response.
+   Ensure the JSON conforms to standard Chart.js structures (keys: "type", "data", "options").
+   Example format:
+   ```json-chart
+   {{
+     "type": "bar",
+     "data": {{
+       "labels": ["Food", "Travel", "Bills"],
+       "datasets": [{{
+         "label": "Spending (₹)",
+         "data": [1200, 500, 2000]
+       }}]
+     }},
+     "options": {{
+       "responsive": true,
+       "plugins": {{
+         "title": {{ "display": true, "text": "Spending by Category" }}
+       }}
+     }}
+   }}
+   ```
+   Ensure the JSON block is syntactically valid and completely closed. Do not put comments inside the JSON-chart block. Keep the rest of your response brief and put the chart block at the very bottom."""
 
 @app.post("/api/chat")
 async def chat_with_assistant(req: ChatRequest):
@@ -264,27 +286,34 @@ async def chat_with_assistant(req: ChatRequest):
     
     try:
         client = Groq(api_key=GROQ_API_KEY)
-        
-        async def stream_generator():
-            stream = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=messages,
-                max_tokens=500,
-                temperature=0.6,
-                stream=True
-            )
-            for chunk in stream:
-                content = chunk.choices[0].delta.content
-                if content:
-                    yield content
-                    
-        return StreamingResponse(stream_generator(), media_type="text/plain")
-        
+        stream = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            max_tokens=500,
+            temperature=0.6,
+            stream=True
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to communicate with Groq: {str(e)}"
+            detail=f"Failed to connect to Groq: {str(e)}"
         )
+
+    def stream_generator():
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content
+
+    return StreamingResponse(stream_generator(), media_type="text/plain")
+
+
+@app.get("/api/config")
+def get_config():
+    return {
+        "supabaseUrl": SUPABASE_URL,
+        "supabaseKey": SUPABASE_KEY
+    }
 
 # Mount static files. Must be mounted AFTER other API endpoints so it doesn't intercept them.
 os.makedirs("static", exist_ok=True)

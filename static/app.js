@@ -1152,6 +1152,9 @@ async function handleAIChatSubmit(e) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
+        // Render any charts returned in the AI response
+        parseAndRenderChatCharts(aiBubble, aiResponseText);
+
         chatHistory.push({ role: "user", content: query });
         chatHistory.push({ role: "assistant", content: aiResponseText });
 
@@ -1257,6 +1260,9 @@ async function generateAIInsights() {
             reportBubble.innerHTML = formatMarkdown(markdownText);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+
+        // Render any charts returned in the AI insights report
+        parseAndRenderChatCharts(reportBubble, markdownText);
 
     } catch (err) {
         console.error("AI Insight report error:", err);
@@ -1383,4 +1389,72 @@ function predictCategory(itemName) {
         }
     }
     return null;
+}
+
+// --- AI DYNAMIC CHART RENDERER ---
+function parseAndRenderChatCharts(bubbleElement, text) {
+    const chartRegex = /```json-chart([\s\S]*?)```/g;
+    let match;
+    let renderedText = text;
+    let chartConfigs = [];
+    let count = 0;
+
+    // Extract configurations and replace with unique placeholders
+    while ((match = chartRegex.exec(text)) !== null) {
+        const jsonString = match[1].trim();
+        try {
+            const config = JSON.parse(jsonString);
+            const chartId = "chat_chart_" + Math.random().toString(36).substr(2, 9);
+            const placeholder = `___CHART_PLACEHOLDER_${count}___`;
+            renderedText = renderedText.replace(match[0], placeholder);
+            chartConfigs.push({ id: chartId, config, placeholder });
+            count++;
+        } catch (e) {
+            console.error("Failed to parse AI chart JSON:", e);
+        }
+    }
+
+    // Call formatMarkdown on the text containing placeholders
+    let htmlContent = formatMarkdown(renderedText);
+
+    // Replace the placeholders with the actual canvas container HTML
+    chartConfigs.forEach(item => {
+        const containerHtml = `<div class="chat-chart-container" style="position: relative; height: 220px; width: 100%; margin: 15px 0; background: hsl(var(--bg-card)); padding: 12px; border-radius: var(--radius-md); border: 1px solid hsl(var(--border-color));"><canvas id="${item.id}"></canvas></div>`;
+        htmlContent = htmlContent.replace(item.placeholder, containerHtml);
+    });
+
+    bubbleElement.innerHTML = htmlContent;
+
+    // Instantiate Chart.js for each placeholder replaced
+    chartConfigs.forEach(item => {
+        const canvas = document.getElementById(item.id);
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            
+            // Set defaults / apply active accent theme colors if they aren't configured
+            if (item.config.data && item.config.data.datasets) {
+                const activeAccent = document.documentElement.getAttribute("data-accent") || "terracotta";
+                const primaryColor = ACCENT_COLORS[activeAccent] || "#d97706";
+                item.config.data.datasets.forEach(ds => {
+                    if (!ds.backgroundColor) {
+                        ds.backgroundColor = item.config.type === 'doughnut' ? 
+                            ['#e8a14e', '#5bb5cc', '#5cb87a', '#a878c8', '#d4726e', '#9a9590'] : primaryColor;
+                    }
+                    if (!ds.borderColor && item.config.type !== 'doughnut') {
+                        ds.borderColor = primaryColor;
+                    }
+                    if (ds.borderWidth === undefined) {
+                        ds.borderWidth = 1;
+                    }
+                });
+            }
+            
+            // Force responsiveness and standard chart properties
+            if (!item.config.options) item.config.options = {};
+            item.config.options.responsive = true;
+            item.config.options.maintainAspectRatio = false;
+
+            new Chart(ctx, item.config);
+        }
+    });
 }
